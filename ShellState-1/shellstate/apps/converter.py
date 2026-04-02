@@ -1,6 +1,10 @@
 """Unit Converter screens and behavior."""
 
-from shellstate.runtime_model import *
+from shellstate.core.runtime_model import (
+    _MAX_CONVERTER_RECENT,
+    _converter_store,
+    _record_activity,
+)
 
 def make_converter(pairs: list) -> tuple:
     def on_render(app):
@@ -52,14 +56,6 @@ _l_render, _l_opts, _l_acts = make_converter([
     ("cm → inches", "cm", "in", 0.393701),
     ("inches → cm", "in", "cm", 2.54),
 ])
-app.add_screen(
-    name="conv_length",
-    title="Length Converter",
-    options=_l_opts,
-    actions=_l_acts,
-    on_render=_l_render,
-    hotkeys={"b": "back"},
-)
 
 _w_render, _w_opts, _w_acts = make_converter([
     ("kg → lbs", "kg", "lbs", 2.20462),
@@ -69,14 +65,6 @@ _w_render, _w_opts, _w_acts = make_converter([
     ("kg → stones", "kg", "st", 0.157473),
     ("stones → kg", "st", "kg", 6.35029),
 ])
-app.add_screen(
-    name="conv_weight",
-    title="Weight Converter",
-    options=_w_opts,
-    actions=_w_acts,
-    on_render=_w_render,
-    hotkeys={"b": "back"},
-)
 
 _t_render, _t_opts, _t_acts = make_converter([
     ("°C → °F", "°C", "°F", lambda c: c * 9 / 5 + 32),
@@ -86,19 +74,40 @@ _t_render, _t_opts, _t_acts = make_converter([
     ("°F → K", "°F", "K", lambda f: (f + 459.67) * 5 / 9),
     ("K → °F", "K", "°F", lambda k: k * 9 / 5 - 459.67),
 ])
-app.add_screen(
-    name="conv_temp",
-    title="Temperature Converter",
-    options=_t_opts,
-    actions=_t_acts,
-    on_render=_t_render,
-    hotkeys={"b": "back"},
-)
 
-app.add_screen(
-    name="converter",
-    title="Unit Converter",
-    options=["Length", "Weight", "Temperature", "Back"],
-    actions=["conv_length", "conv_weight", "conv_temp", "back"],
-    hotkeys={"b": "back"},
-)
+
+def register_converter_screens(app) -> None:
+    app.add_screen(
+        name="conv_length",
+        title="Length Converter",
+        options=_l_opts,
+        actions=_l_acts,
+        on_render=_l_render,
+        hotkeys={"b": "back"},
+    )
+
+    app.add_screen(
+        name="conv_weight",
+        title="Weight Converter",
+        options=_w_opts,
+        actions=_w_acts,
+        on_render=_w_render,
+        hotkeys={"b": "back"},
+    )
+
+    app.add_screen(
+        name="conv_temp",
+        title="Temperature Converter",
+        options=_t_opts,
+        actions=_t_acts,
+        on_render=_t_render,
+        hotkeys={"b": "back"},
+    )
+
+    app.add_screen(
+        name="converter",
+        title="Unit Converter",
+        options=["Length", "Weight", "Temperature", "Back"],
+        actions=["conv_length", "conv_weight", "conv_temp", "back"],
+        hotkeys={"b": "back"},
+    )

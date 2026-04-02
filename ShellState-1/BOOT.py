@@ -1,4 +1,4 @@
-from shellstate.demo_app import main
+from shellstate.core.bootstrap import main
 
 
 if __name__ == "__main__":

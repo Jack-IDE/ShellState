@@ -1,6 +1,13 @@
 """Program Maker screens and editor behavior."""
 
-from shellstate.runtime_model import *
+from shellstate.core.runtime_model import (
+    _current_editor_draft_name,
+    _editor_store,
+    _notes_store,
+    _record_activity,
+    _save_current_draft,
+    _set_editor_buffer,
+)
 from shellstate.apps.notes import _fullscreen_editor_size, _notes_render_canvas_row
 
 _PROGRAM_MAKER_ROWS = 8
@@ -693,65 +700,64 @@ _program_slot_labels = [_program_slot_label(i) for i in _program_slot_display_or
 _program_slot_actions = [_program_slot_action(i) for i in _program_slot_display_order]
 
 
-app.add_screen(
-    name="program_maker",
-    title="Program Maker",
-    options=[
-        "New Draft",
-        "Delete Draft",
-        *_program_slot_labels,
-        "Back",
-    ],
-    actions=[
-        program_new_draft,
-        program_delete_draft,
-        *_program_slot_actions,
-        "back",
-    ],
-    on_render=render_program_maker,
-    on_enter=enter_program_maker,
-    hotkeys={
-        "n": program_new_draft,
-        "d": program_delete_draft,
-        "r": program_rename_draft,
-        "b": "back",
-    },
-)
-app.screens["program_maker"]["main_columns"] = 2
-app.screens["program_maker"]["menu_row_gap"] = 0
-app.screens["program_maker"]["menu_box_gap"] = 4
-app.screens["program_maker"]["menu_center_seam"] = True
-app.screens["program_maker"]["footer_text"] = "[Arrows] Move  [Enter] Open  [N] New  [D] Delete  [R] Rename  [Esc] Back"
+def register_program_maker_screens(app) -> None:
+    app.add_screen(
+        name="program_maker",
+        title="Program Maker",
+        options=[
+            "New Draft",
+            "Delete Draft",
+            *_program_slot_labels,
+            "Back",
+        ],
+        actions=[
+            program_new_draft,
+            program_delete_draft,
+            *_program_slot_actions,
+            "back",
+        ],
+        on_render=render_program_maker,
+        on_enter=enter_program_maker,
+        hotkeys={
+            "n": program_new_draft,
+            "d": program_delete_draft,
+            "r": program_rename_draft,
+            "b": "back",
+        },
+    )
+    app.screens["program_maker"]["main_columns"] = 2
+    app.screens["program_maker"]["menu_row_gap"] = 0
+    app.screens["program_maker"]["menu_box_gap"] = 4
+    app.screens["program_maker"]["menu_center_seam"] = True
+    app.screens["program_maker"]["footer_text"] = "[Arrows] Move  [Enter] Open  [N] New  [D] Delete  [R] Rename  [Esc] Back"
 
+    app.add_screen(
+        name="program_delete_draft",
+        title="Program Maker",
+        options=[],
+        actions=[],
+        on_enter=enter_program_delete_draft,
+        main_panel=render_program_delete_draft_panel,
+        main_title="Delete Draft",
+        screen_type="workspace_full",
+    )
+    app.screens["program_delete_draft"]["interaction_mode"] = "typing"
+    app.screens["program_delete_draft"]["hide_menu"] = True
+    app.screens["program_delete_draft"]["on_key"] = handle_program_delete_draft_key
+    app.screens["program_delete_draft"]["footer_text"] = "[Up/Down] Select Draft  [Enter] Delete  [Esc] Back"
 
-app.add_screen(
-    name="program_delete_draft",
-    title="Program Maker",
-    options=[],
-    actions=[],
-    on_enter=enter_program_delete_draft,
-    main_panel=render_program_delete_draft_panel,
-    main_title="Delete Draft",
-    screen_type="workspace_full",
-)
-app.screens["program_delete_draft"]["interaction_mode"] = "typing"
-app.screens["program_delete_draft"]["hide_menu"] = True
-app.screens["program_delete_draft"]["on_key"] = handle_program_delete_draft_key
-app.screens["program_delete_draft"]["footer_text"] = "[Up/Down] Select Draft  [Enter] Delete  [Esc] Back"
-
-
-app.add_screen(
-    name="program_editor",
-    title="Program Editor",
-    options=[],
-    actions=[],
-    main_panel=render_program_editor_panel,
-    main_title="Program Editor",
-    screen_type="workspace_full",
-)
-app.screens["program_editor"]["interaction_mode"] = "typing"
-app.screens["program_editor"]["hide_menu"] = True
-app.screens["program_editor"]["on_key"] = handle_program_editor_key
-app.screens["program_editor"]["footer_text"] = "[Arrows] Move  [Enter] New Line  [Backspace] Delete  [Esc] Save + Back"
-app.screens["program_editor"]["program_editor_width_fill"] = True
-app.screens["program_editor"]["program_editor_height_fill"] = True
+    app.add_screen(
+        name="program_editor",
+        title="Program Editor",
+        options=[],
+        actions=[],
+        main_panel=render_program_editor_panel,
+        main_title="Program Editor",
+        screen_type="workspace_full",
+    )
+    app.screens["program_editor"]["interaction_mode"] = "typing"
+    app.screens["program_editor"]["hide_menu"] = True
+    app.screens["program_editor"]["on_key"] = handle_program_editor_key
+    app.screens["program_editor"]["footer_text"] = "[Arrows] Move  [Enter] New Line  [Backspace] Delete  [Esc] Save + Back"
+    app.screens["program_editor"]["program_editor_width_fill"] = True
+    app.screens["program_editor"]["program_editor_height_fill"] = True

@@ -1,6 +1,28 @@
 """Export Center screens and save/load behavior."""
 
-from shellstate.runtime_model import *
+import json
+import os
+from datetime import datetime
+
+from shellstate.core.runtime_model import (
+    APP_DATA_FORMAT,
+    DATA_FILE,
+    EXPORTS_DIR,
+    FULL_BACKUP_FORMATS,
+    PROJECT_ROOT,
+    SNAPSHOTS_DIR,
+    _build_full_backup_payload,
+    _calculator_store,
+    _converter_store,
+    _editor_store,
+    _notes_store,
+    _recent_exports,
+    _record_activity,
+    _system_store,
+    _timestamp_slug,
+    _write_json_export,
+    _write_text_export,
+)
 
 def _notes_text_dump(app) -> str:
     notes = _notes_store(app).get("notes", [])
@@ -64,7 +86,7 @@ def export_editor_txt(app):
 
 def export_app_data_json(app):
     payload = {
-        "format": "shellstate-app-data",
+        "format": APP_DATA_FORMAT,
         "version": 2,
         "exported_at": datetime.now().isoformat(timespec="seconds"),
         "apps": app.app_data.get("apps", {}),
@@ -123,13 +145,13 @@ def _loadable_save_entries() -> list[dict]:
                 if not isinstance(payload, dict):
                     continue
                 fmt = str(payload.get('format') or '')
-                if fmt not in {'shellstate-demo-backup', 'shellstate-app-data'}:
+                if fmt not in (FULL_BACKUP_FORMATS | {APP_DATA_FORMAT}):
                     continue
                 stat = os.stat(path)
             except Exception:
                 continue
             export_entries.append({
-                "kind": "full" if fmt == 'shellstate-demo-backup' else "apps",
+                "kind": "full" if fmt in FULL_BACKUP_FORMATS else "apps",
                 "label": filename,
                 "filename": filename,
                 "path": path,
@@ -246,7 +268,7 @@ def render_load_saves_panel(app):
 
 
 def _finish_loaded_state(app, status_message: str, activity_message: str) -> None:
-    from shellstate.apps.shell_ui import _finalize_shell_ui
+    from shellstate.shell.shell_ui import _finalize_shell_ui
 
     _init_defaults(app)
     _finalize_shell_ui(app)
@@ -315,61 +337,62 @@ def enter_load_saves(app, _previous=None):
     _refresh_load_saves_screen(app)
 
 
-app.add_screen(
-    name="saves",
-    title="Export Center",
-    options=[
-        "Save Main State Now",
-        "Load Saved JSON",
-        "Export Notes as TXT",
-        "Export Calculator History as TXT",
-        "Export Converter Data as TXT",
-        "Export Program Drafts as TXT",
-        "Export App Data as JSON",
-        "Export Full Backup as JSON",
-        "Clear Recent Activity",
-        "Back",
-    ],
-    actions=[
-        save_main_state_now,
-        "load_saves",
-        export_notes_txt,
-        export_calculator_txt,
-        export_converter_txt,
-        export_editor_txt,
-        export_app_data_json,
-        export_full_backup_json,
-        clear_recent_activity,
-        "back",
-    ],
-    main_panel=render_saves_panel,
-    main_title="Export Center",
-    panel_mode="auto",
-    panel_min_height=8,
-    panel_max_height=8,
-    screen_type="detail",
-    hotkeys={"b": "back", "s": save_main_state_now, "l": "load_saves"},
-)
-app.screens["saves"]["main_panel_width"] = 86
-app.screens["saves"]["main_columns"] = 2
-app.screens["saves"]["menu_row_gap"] = 0
-app.screens["saves"]["menu_box_gap"] = 4
-app.screens["saves"]["menu_center_seam"] = True
-app.screens["saves"]["footer_text"] = "[Arrows] Move  [Enter] Select  [S] Save  [L] Load  [Esc] Back"
-app.screens["saves"]["status_near_footer"] = True
+def register_export_center_screens(app) -> None:
+    app.add_screen(
+        name="saves",
+        title="Export Center",
+        options=[
+            "Save Main State Now",
+            "Load Saved JSON",
+            "Export Notes as TXT",
+            "Export Calculator History as TXT",
+            "Export Converter Data as TXT",
+            "Export Program Drafts as TXT",
+            "Export App Data as JSON",
+            "Export Full Backup as JSON",
+            "Clear Recent Activity",
+            "Back",
+        ],
+        actions=[
+            save_main_state_now,
+            "load_saves",
+            export_notes_txt,
+            export_calculator_txt,
+            export_converter_txt,
+            export_editor_txt,
+            export_app_data_json,
+            export_full_backup_json,
+            clear_recent_activity,
+            "back",
+        ],
+        main_panel=render_saves_panel,
+        main_title="Export Center",
+        panel_mode="auto",
+        panel_min_height=8,
+        panel_max_height=8,
+        screen_type="detail",
+        hotkeys={"b": "back", "s": save_main_state_now, "l": "load_saves"},
+    )
+    app.screens["saves"]["main_panel_width"] = 86
+    app.screens["saves"]["main_columns"] = 2
+    app.screens["saves"]["menu_row_gap"] = 0
+    app.screens["saves"]["menu_box_gap"] = 4
+    app.screens["saves"]["menu_center_seam"] = True
+    app.screens["saves"]["footer_text"] = "[Arrows] Move  [Enter] Select  [S] Save  [L] Load  [Esc] Back"
+    app.screens["saves"]["status_near_footer"] = True
 
-app.add_screen(
-    name="load_saves",
-    title="Load Saved JSON",
-    options=[],
-    actions=[],
-    on_enter=enter_load_saves,
-    main_panel=render_load_saves_panel,
-    main_title="Saved JSON Files",
-    panel_mode="auto",
-    panel_min_height=10,
-    panel_max_height=11,
-    screen_type="detail",
-    hotkeys={"b": "back"},
-)
-app.screens["load_saves"]["main_panel_width"] = 78
+    app.add_screen(
+        name="load_saves",
+        title="Load Saved JSON",
+        options=[],
+        actions=[],
+        on_enter=enter_load_saves,
+        main_panel=render_load_saves_panel,
+        main_title="Saved JSON Files",
+        panel_mode="auto",
+        panel_min_height=10,
+        panel_max_height=11,
+        screen_type="detail",
+        hotkeys={"b": "back"},
+    )
+    app.screens["load_saves"]["main_panel_width"] = 78

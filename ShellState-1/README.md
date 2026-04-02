@@ -1,59 +1,111 @@
 # ShellState
 
-A small zero-dependency Python terminal OS/menu framework demo.
+ShellState is a state-based shell/runtime with a text-menu control plane and a built-in graphics subsystem.
 
-## About
+This update is the first repo pass that includes the graphics engine as a real part of the project instead of a side experiment. The shell stays menu-driven, while graphics lives in its own workspace and CLI.
 
-ShellState is a compact terminal-driven shell demo built on a reusable menu framework.
-It includes a calculator, a multiline notes tool, and a unit converter, plus a lightweight
-memory/snapshot layer for OS-style state experiments.
+## What is in this update
 
-## Run
+- built-in 2D image rendering
+- built-in 3D scene rendering
+- frame-sequence export for clips
+- a Graphics Lab workspace inside the shell
+- a HOME-screen image renderer driven by the graphics engine
+- a separate `GRAPHICS.py` entry point for direct rendering/export tasks
 
-From the project root:
+The boundary is simple:
 
-```bash
-python BOOT.py
+- `shell/` owns the normal menu UI
+- `graphics/` owns rendering, export, and media helpers
+- `apps/graphics_lab.py` is the bridge workspace inside the shell
+
+Graphics does not replace the shell UI. It is a parallel subsystem.
+
+## Boot
+
+```
+python3 BOOT.py
 ```
 
-## Project layout
+## Graphics CLI
 
-```text
-ShellState/
-├─ BOOT.py
-├─ README.md
-├─ .gitignore
-├─ shellstate/
-│  ├─ __init__.py
-│  ├─ engine.py
-│  ├─ tlb_patch.py
-│  ├─ runtime_model.py
-│  ├─ demo_app.py
-│  └─ apps/
-│     ├─ __init__.py
-│     ├─ calculator.py
-│     ├─ notes.py
-│     ├─ converter.py
-│     ├─ program_maker.py
-│     ├─ export_center.py
-│     └─ shell_ui.py
-└─ runtime/
-   ├─ snapshots/
-   └─ exports/
+```
+python3 GRAPHICS.py selftest
 ```
 
-## Notes
+The self-test writes preview files under:
 
-- `BOOT.py` is the simple entry point.
-- `shellstate/engine.py` is the shared terminal/UI framework.
-- `shellstate/runtime_model.py` holds shared state, save helpers, and app-facing constants.
-- `shellstate/apps/` contains the built-in app modules and screen registrations.
-- All generated runtime files go into `runtime/`.
-- `runtime/snapshots/` holds RAM/swap snapshot files and metadata when generated.
-- `runtime/exports/` holds optional exported files when generated.
-- `runtime/demo_save.json` is only a bootstrap path used before the memory manager attaches.
+```
+runtime/exports/graphics/selftest/
+```
 
-## Requirements
+Useful commands:
 
-- Python 3.10+
-- No external dependencies
+```
+python3 GRAPHICS.py render-2d --out image2d.ppm
+python3 GRAPHICS.py render --width 64 --height 36 --out still3d.ppm
+python3 GRAPHICS.py scene-clip --frames 6 --fps 6 --width 48 --height 27 --outdir scene_clip
+python3 GRAPHICS.py render-game-frame --out game2d.ppm
+python3 GRAPHICS.py game-clip --frames 24 --fps 24 --outdir game_clip
+```
+
+## In-shell graphics
+
+Open:
+
+```
+Utilities -> Graphics Lab
+```
+
+Graphics Lab lets you:
+
+- load a built-in scene preset
+- edit scene JSON
+- import a scene JSON file
+- render a preview image
+- open the real image in a separate viewer
+
+The preview render is written to:
+
+```
+runtime/exports/graphics/lab/current_lab.ppm
+```
+
+## HOME image
+
+Open:
+
+```
+Settings -> Home Image
+```
+
+This renders a graphics-engine image for the HOME screen and stores it at:
+
+```
+runtime/exports/graphics/home/current_home.ppm
+```
+
+## Dependencies
+
+Core rendering is stdlib-only Python.
+
+For opening a real image window, ShellState tries:
+
+- `tkinter` when available
+- otherwise a platform opener such as `termux-open`, `open`, `xdg-open`, or `gio open`
+
+The shell and graphics export paths do not require third-party Python packages.
+
+## Current scope
+
+Present in this pass:
+
+- stdlib-only 2D raster helpers
+- field-based 3D still rendering
+- frame-sequence export for sample clips
+- minimal game/world snapshot rendering
+- HOME-screen graphics integration
+
+## License
+
+Apache-2.0

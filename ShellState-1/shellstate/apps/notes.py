@@ -1,6 +1,11 @@
 """Quick Notes screens and behavior."""
 
-from shellstate.runtime_model import *
+from shellstate.core.engine import A
+from shellstate.core.runtime_model import (
+    _notes_store,
+    _record_activity,
+    _system_settings,
+)
 
 NOTES_MAIN_WIDTH = 46
 NOTES_MAIN_HEIGHT = 8
@@ -545,6 +550,7 @@ def delete_note_by_number(app):
     app.set_status(f'Note {picked} deleted: "{preview}"')
 
 
+
 def clear_all_notes(app):
     _notes_store(app)["notes"] = []
     _notes_set_open_index(app, None)
@@ -571,52 +577,6 @@ def configure_notes_screen(app, *_args) -> None:
     screen["info_panel_width"] = max(22, min(info_width, max(22, total_width - 10)))
 
 
-app.add_screen(
-    name="notes",
-    title="Quick Notes",
-    options=[
-        label_edit_draft,
-        "Open Saved Note",
-        "Delete Note by Number",
-        "Clear All Notes",
-        "Back",
-    ],
-    actions=[
-        open_notes_canvas_editor,
-        open_saved_note,
-        delete_note_by_number,
-        A.confirm(
-            title="Clear All Notes",
-            message="Delete ALL notes? This cannot be undone.",
-            on_yes=clear_all_notes,
-            on_no=A.status("Canceled."),
-        ),
-        "back",
-    ],
-    info_panel=render_notes_list_panel,
-    info_title="Saved Notes",
-    screen_type="workspace_split",
-    on_enter=configure_notes_screen,
-    hotkeys={"a": open_notes_canvas_editor, "o": open_saved_note, "b": "back"},
-)
-
-
-app.add_screen(
-    name="notes_draft",
-    title="Note Draft",
-    options=[],
-    actions=[],
-    main_panel=render_notes_editor_panel,
-    main_title="Canvas Editor",
-    screen_type="workspace_full",
-)
-app.screens["notes_draft"]["interaction_mode"] = "typing"
-app.screens["notes_draft"]["hide_menu"] = True
-app.screens["notes_draft"]["on_key"] = handle_notes_editor_key
-app.screens["notes_draft"]["notes_editor_width"] = NOTES_EDITOR_WIDTH
-app.screens["notes_draft"]["notes_editor_height"] = NOTES_EDITOR_HEIGHT
-app.screens["notes_draft"]["notes_editor_width_fill"] = True
-app.screens["notes_draft"]["notes_editor_height_fill"] = True
 def notes_draft_footer(app):
     width, _ = _notes_terminal_size(app)
     if width < 56:
@@ -624,4 +584,50 @@ def notes_draft_footer(app):
     return "[Typing Mode]  [Arrows] Move  [Enter] New Line  [Backspace] Delete  [Esc] Save + Back"
 
 
-app.screens["notes_draft"]["footer_text"] = notes_draft_footer
+def register_notes_screens(app) -> None:
+    app.add_screen(
+        name="notes",
+        title="Quick Notes",
+        options=[
+            label_edit_draft,
+            "Open Saved Note",
+            "Delete Note by Number",
+            "Clear All Notes",
+            "Back",
+        ],
+        actions=[
+            open_notes_canvas_editor,
+            open_saved_note,
+            delete_note_by_number,
+            A.confirm(
+                title="Clear All Notes",
+                message="Delete ALL notes? This cannot be undone.",
+                on_yes=clear_all_notes,
+                on_no=A.status("Canceled."),
+            ),
+            "back",
+        ],
+        info_panel=render_notes_list_panel,
+        info_title="Saved Notes",
+        screen_type="workspace_split",
+        on_enter=configure_notes_screen,
+        hotkeys={"a": open_notes_canvas_editor, "o": open_saved_note, "b": "back"},
+    )
+
+    app.add_screen(
+        name="notes_draft",
+        title="Note Draft",
+        options=[],
+        actions=[],
+        main_panel=render_notes_editor_panel,
+        main_title="Canvas Editor",
+        screen_type="workspace_full",
+    )
+    app.screens["notes_draft"]["interaction_mode"] = "typing"
+    app.screens["notes_draft"]["hide_menu"] = True
+    app.screens["notes_draft"]["on_key"] = handle_notes_editor_key
+    app.screens["notes_draft"]["notes_editor_width"] = NOTES_EDITOR_WIDTH
+    app.screens["notes_draft"]["notes_editor_height"] = NOTES_EDITOR_HEIGHT
+    app.screens["notes_draft"]["notes_editor_width_fill"] = True
+    app.screens["notes_draft"]["notes_editor_height_fill"] = True
+    app.screens["notes_draft"]["footer_text"] = notes_draft_footer

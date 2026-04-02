@@ -1,6 +1,15 @@
 """Calculator app screens and behavior."""
 
-from shellstate.runtime_model import *
+import ast
+import operator
+
+from shellstate.core.runtime_model import (
+    _MAX_CALC_ABS_VALUE,
+    _MAX_CALC_EXPR_LEN,
+    _calculator_store,
+    _record_activity,
+    _system_settings,
+)
 
 _SAFE_OPS = {
     ast.Add: operator.add,
@@ -219,18 +228,19 @@ def handle_calculator_key(app, key: str):
     return True
 
 
-app.add_screen(
-    name="calculator",
-    title="Calculator",
-    options=[],
-    actions=[],
-    main_panel=render_calculator_main_panel,
-    main_title="Calculator",
-    screen_type="workspace_full",
-)
-app.screens["calculator"]["interaction_mode"] = "typing"
-app.screens["calculator"]["hide_menu"] = True
-app.screens["calculator"]["on_key"] = handle_calculator_key
-app.screens["calculator"]["footer_text"] = (
-    "[Typing Mode]  [Enter] Calculate  [Arrows] Move/Recall  [Shift+C] Clear Expr  [Shift+X] Clear History  [Esc] Back"
-)
+def register_calculator_screen(app) -> None:
+    app.add_screen(
+        name="calculator",
+        title="Calculator",
+        options=[],
+        actions=[],
+        main_panel=render_calculator_main_panel,
+        main_title="Calculator",
+        screen_type="workspace_full",
+    )
+    app.screens["calculator"]["interaction_mode"] = "typing"
+    app.screens["calculator"]["hide_menu"] = True
+    app.screens["calculator"]["on_key"] = handle_calculator_key
+    app.screens["calculator"]["footer_text"] = (
+        "[Typing Mode]  [Enter] Calculate  [Arrows] Move/Recall  [Shift+C] Clear Expr  [Shift+X] Clear History  [Esc] Back"
+    )
